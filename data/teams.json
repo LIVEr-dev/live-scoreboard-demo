@@ -1,0 +1,40 @@
+{
+  "grade1": {
+    "name": "Grade 1 Division",
+    "teams": [
+      { "id": 1, "name": "Rising Stars Red" },
+      { "id": 2, "name": "Rising Stars Blue" },
+      { "id": 3, "name": "Rising Stars Gold" },
+      { "id": 4, "name": "Rising Stars Green" }
+    ],
+    "matches": [
+      { "id": 1,  "home": "Rising Stars Red",   "away": "Rising Stars Blue",  "homeScore": 3,    "awayScore": 1,    "status": "completed",  "date": "2024-05-15" },
+      { "id": 2,  "home": "Rising Stars Gold",  "away": "Rising Stars Green", "homeScore": 2,    "awayScore": 2,    "status": "completed",  "date": "2024-05-15" },
+      { "id": 3,  "home": "Rising Stars Blue",  "away": "Rising Stars Gold",  "homeScore": 1,    "awayScore": 3,    "status": "completed",  "date": "2024-05-22" },
+      { "id": 4,  "home": "Rising Stars Green", "away": "Rising Stars Red",   "homeScore": 0,    "awayScore": 2,    "status": "completed",  "date": "2024-05-22" },
+      { "id": 5,  "home": "Rising Stars Red",   "away": "Rising Stars Gold",  "homeScore": null, "awayScore": null, "status": "scheduled",  "date": "2024-06-05" },
+      { "id": 6,  "home": "Rising Stars Blue",  "away": "Rising Stars Green", "homeScore": null, "awayScore": null, "status": "scheduled",  "date": "2024-06-05" },
+      { "id": 7,  "home": "Rising Stars Green", "away": "Rising Stars Blue",  "homeScore": null, "awayScore": null, "status": "scheduled",  "date": "2024-06-12" },
+      { "id": 8,  "home": "Rising Stars Gold",  "away": "Rising Stars Red",   "homeScore": null, "awayScore": null, "status": "scheduled",  "date": "2024-06-12" }
+    ]
+  },
+  "grade2": {
+    "name": "Grade 2 Division",
+    "teams": [
+      { "id": 5, "name": "Rising Stars White" },
+      { "id": 6, "name": "Rising Stars Black" },
+      { "id": 7, "name": "Rising Stars Orange" },
+      { "id": 8, "name": "Rising Stars Purple" }
+    ],
+    "matches": [
+      { "id": 9,  "home": "Rising Stars White",  "away": "Rising Stars Black",  "homeScore": 2,    "awayScore": 0,    "status": "completed",  "date": "2024-05-15" },
+      { "id": 10, "home": "Rising Stars Orange", "away": "Rising Stars Purple", "homeScore": 1,    "awayScore": 1,    "status": "completed",  "date": "2024-05-15" },
+      { "id": 11, "home": "Rising Stars Black",  "away": "Rising Stars Orange", "homeScore": 2,    "awayScore": 3,    "status": "completed",  "date": "2024-05-22" },
+      { "id": 12, "home": "Rising Stars Purple", "away": "Rising Stars White",  "homeScore": 1,    "awayScore": 1,    "status": "completed",  "date": "2024-05-22" },
+      { "id": 13, "home": "Rising Stars White",  "away": "Rising Stars Orange", "homeScore": null, "awayScore": null, "status": "scheduled",  "date": "2024-06-05" },
+      { "id": 14, "home": "Rising Stars Black",  "away": "Rising Stars Purple", "homeScore": null, "awayScore": null, "status": "scheduled",  "date": "2024-06-05" },
+      { "id": 15, "home": "Rising Stars Purple", "away": "Rising Stars Black",  "homeScore": null, "awayScore": null, "status": "scheduled",  "date": "2024-06-12" },
+      { "id": 16, "home": "Rising Stars Orange", "away": "Rising Stars White",  "homeScore": null, "awayScore": null, "status": "scheduled",  "date": "2024-06-12" }
+    ]
+  }
+}
