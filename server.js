@@ -1,23 +1,26 @@
 const express = require('express');
-const fs = require('fs');
-const path = require('path');
-const multer = require('multer');
 const http = require('http');
 const { Server } = require('socket.io');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-const DATA_FILE = path.join(__dirname, 'data', 'tournaments.json');
-const UPLOAD_DIR = path.join(__dirname, 'uploads');
-fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+const DATA_DIR = path.join(__dirname, 'data');
+const DATA_FILE = path.join(DATA_DIR, 'tournaments.json');
+const UPLOADS = path.join(__dirname, 'uploads');
+
+// ensure dirs
+if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR);
+if (!fs.existsSync(UPLOADS)) fs.mkdirSync(UPLOADS);
+if (!fs.existsSync(DATA_FILE)) fs.writeFileSync(DATA_FILE, JSON.stringify({ tournaments: [] }, null, 2));
 
 app.use(express.json());
-// Serve repository static files (index.html, js, css, data)
-app.use(express.static(path.join(__dirname)));
-// Expose uploaded logos
-app.use('/uploads', express.static(UPLOAD_DIR));
+app.use('/uploads', express.static(UPLOADS));
+app.use(express.static(__dirname)); // serve client files from repo root
 
 app.get('/api/ping', (req, res) => res.json({ ok: true }));
 
@@ -25,47 +28,48 @@ app.get('/api/tournaments', (req, res) => {
   try {
     const raw = fs.readFileSync(DATA_FILE, 'utf8');
     res.json(JSON.parse(raw));
-  } catch (e) {
-    res.json({ tournaments: [] });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
 app.post('/api/tournaments', (req, res) => {
   try {
-    fs.writeFileSync(DATA_FILE, JSON.stringify(req.body, null, 2), 'utf8');
-    // broadcast to connected clients
-    io.emit('tournaments:update', req.body);
+    const data = req.body;
+    fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+    io.emit('tournaments:update', data);
     res.json({ ok: true });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
-// Logo upload endpoint (multipart form-data; field name: "logo")
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, UPLOAD_DIR),
+  destination: (req, file, cb) => cb(null, UPLOADS),
   filename: (req, file, cb) => {
-    const name = `${Date.now()}-${file.originalname.replace(/\s+/g,'_')}`;
-    cb(null, name);
+    const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    const ext = path.extname(file.originalname) || '';
+    cb(null, file.fieldname + '-' + unique + ext);
   }
 });
 const upload = multer({ storage });
 
 app.post('/api/upload-logo', upload.single('logo'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-  const url = `/uploads/${req.file.filename}`;
+  const url = '/uploads/' + req.file.filename;
   res.json({ url });
 });
 
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`Server listening on http://localhost:${PORT}`);
+});
+
 io.on('connection', (socket) => {
-  // optional: send current data on connect
+  console.log('socket connected', socket.id);
+  // send current data
   try {
     const raw = fs.readFileSync(DATA_FILE, 'utf8');
     socket.emit('tournaments:update', JSON.parse(raw));
-  } catch (e) {
-    socket.emit('tournaments:update', { tournaments: [] });
-  }
+  } catch (e) {}
 });
-
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`Server listening on http://localhost:${PORT}`));
