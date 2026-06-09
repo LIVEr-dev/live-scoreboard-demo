@@ -11,6 +11,7 @@ Server mode (optional, enables real-time sync and logo uploads):
 1. Install dependencies and start server:
    - npm install
    - npm start
+   - or use provided scripts: Windows PowerShell: .\run.ps1  ; Unix: ./run.sh
 2. Open http://localhost:3000 in a browser. The app will auto-detect the server and switch to server-mode.
 
 Server-mode features:

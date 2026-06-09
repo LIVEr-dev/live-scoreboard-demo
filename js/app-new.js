@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
   (async () => {
     await detectServer();
     loadSavedDraft();
-    loadTournamentsData();
+    await loadTournamentsData();
     setupEventListeners();
     initializeUI();
     window.addEventListener('storage', handleStorageSync);
@@ -168,6 +168,7 @@ function loadSavedDraft() {
 
 function populateTournamentSelector() {
   const select = document.getElementById('tournament-select');
+  if (!select) return;
   select.innerHTML = '';
 
   if (!tournamentsData.tournaments || tournamentsData.tournaments.length === 0) {
@@ -192,7 +193,8 @@ function switchTournament(tournamentId) {
   currentMatch = null;
 
   renderTournamentUI();
-  document.getElementById('tournament-select').value = tournamentId;
+  const sel = document.getElementById('tournament-select');
+  if (sel) sel.value = tournamentId;
 }
 
 function switchDivision(divisionId) {
@@ -218,6 +220,7 @@ function renderTournamentUI() {
 
 function updateEmptyState() {
   const emptyCard = document.getElementById('empty-state-card');
+  if (!emptyCard) return;
 
   if (!tournamentsData.tournaments || tournamentsData.tournaments.length === 0) {
     emptyCard.classList.remove('d-none');
@@ -226,36 +229,31 @@ function updateEmptyState() {
   }
 
   if (currentTournament) {
-    document.getElementById('league-title').textContent = `${currentTournament.name} — ${currentTournament.sport.toUpperCase()}`;
+    const title = document.getElementById('league-title');
+    if (title) title.textContent = `${currentTournament.name} — ${currentTournament.sport.toUpperCase()}`;
   } else {
-    document.getElementById('league-title').textContent = 'No tournaments yet';
+    const title = document.getElementById('league-title');
+    if (title) title.textContent = 'No tournaments yet';
   }
 }
 
 function renderDivisionTabs() {
   const container = document.getElementById('divisions-tabs');
+  if (!container) return;
   container.innerHTML = '';
 
   if (!currentTournament.divisions || currentTournament.divisions.length === 0) return;
 
   currentTournament.divisions.forEach(div => {
     const btn = document.createElement('button');
-    btn.className = 'league-tab' + (currentDivision.id === div.id ? ' active' : '');
+    btn.className = 'league-tab' + (currentDivision && currentDivision.id === div.id ? ' active' : '');
     btn.setAttribute('data-division', div.id);
     btn.setAttribute('role', 'tab');
-    btn.setAttribute('aria-selected', currentDivision.id === div.id);
+    btn.setAttribute('aria-selected', currentDivision && currentDivision.id === div.id);
     btn.textContent = div.name;
     btn.addEventListener('click', () => switchDivision(div.id));
     container.appendChild(btn);
   });
-}
-
-function switchDivision(divisionId) {
-  const division = currentTournament.divisions?.find(d => d.id === divisionId);
-  if (!division) return;
-
-  currentDivision = division;
-  renderTournamentUI();
 }
 
 // ============================================================
@@ -332,23 +330,24 @@ function renderLeague() {
 function handleAdminLogin(password) {
   if (password === ADMIN_PASSWORD) {
     adminLoggedIn = true;
-    document.getElementById('admin-section').style.display = 'block';
-    document.getElementById('admin-login-section').classList.add('d-none');
-    document.getElementById('admin-panel').classList.remove('d-none');
+    const adminSection = document.getElementById('admin-section');
+    if (adminSection) adminSection.style.display = 'block';
+    document.getElementById('admin-login-section')?.classList.add('d-none');
+    document.getElementById('admin-panel')?.classList.remove('d-none');
     showAdminPanel();
     showSuccess('Admin access granted.');
   } else {
     showError('Incorrect password. Please try again.');
-    document.getElementById('admin-password').value = '';
+    const pw = document.getElementById('admin-password'); if (pw) pw.value = '';
   }
 }
 
 function handleAdminLogout() {
   adminLoggedIn = false;
-  document.getElementById('admin-panel').classList.add('d-none');
-  document.getElementById('admin-login-section').classList.remove('d-none');
-  document.getElementById('admin-password').value = '';
-  document.getElementById('admin-section').style.display = 'none';
+  document.getElementById('admin-panel')?.classList.add('d-none');
+  document.getElementById('admin-login-section')?.classList.remove('d-none');
+  const pw = document.getElementById('admin-password'); if (pw) pw.value = '';
+  const adminSection = document.getElementById('admin-section'); if (adminSection) adminSection.style.display = 'none';
 }
 
 function showAdminPanel() {
@@ -392,6 +391,7 @@ function handleCreateTournament(formData) {
     ]
   };
 
+  tournamentsData.tournaments = tournamentsData.tournaments || [];
   tournamentsData.tournaments.push(tournament);
   saveDraftChanges();
   populateTournamentSelector();
@@ -694,27 +694,32 @@ function exportData() {
 function populateAdminSelects() {
   // Tournament selector for teams
   const tourSelect = document.getElementById('tournament-for-teams');
-  tourSelect.innerHTML = '<option value="">— Select Tournament —</option>';
-  tournamentsData.tournaments?.forEach(t => {
-    const opt = document.createElement('option');
-    opt.value = t.id;
-    opt.textContent = t.name;
-    tourSelect.appendChild(opt);
-  });
+  if (tourSelect) {
+    tourSelect.innerHTML = '<option value="">— Select Tournament —</option>';
+    tournamentsData.tournaments?.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t.id;
+      opt.textContent = t.name;
+      tourSelect.appendChild(opt);
+    });
+  }
 
   // Tournament selector for scores
   const scoreSelect = document.getElementById('tournament-for-scores');
-  scoreSelect.innerHTML = '<option value="">— Select Tournament —</option>';
-  tournamentsData.tournaments?.forEach(t => {
-    const opt = document.createElement('option');
-    opt.value = t.id;
-    opt.textContent = t.name;
-    scoreSelect.appendChild(opt);
-  });
+  if (scoreSelect) {
+    scoreSelect.innerHTML = '<option value="">— Select Tournament —</option>';
+    tournamentsData.tournaments?.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t.id;
+      opt.textContent = t.name;
+      scoreSelect.appendChild(opt);
+    });
+  }
 }
 
 function populateTournamentsListUI() {
   const container = document.getElementById('tournaments-list-container');
+  if (!container) return;
   container.innerHTML = '';
 
   tournamentsData.tournaments?.forEach(t => {
@@ -734,6 +739,7 @@ function populateTournamentsListUI() {
 
 function populateTeamsListUI() {
   const container = document.getElementById('teams-list-container');
+  if (!container) return;
   container.innerHTML = '';
 
   if (!currentTournament) return;
@@ -789,7 +795,490 @@ function populateAddMatchTeams() {
 
 // ============================================================
 // Event Listeners
-// (unchanged wiring)
 // ============================================================
 
-// ... rest of file unchanged (omitted here for brevity) ...
+function setupEventListeners() {
+  // Admin access button
+  document.getElementById('admin-access-btn')?.addEventListener('click', () => {
+    document.getElementById('admin-section').style.display = 'block';
+    document.getElementById('admin-section').scrollIntoView({ behavior: 'smooth' });
+  });
+
+  // Admin login form
+  document.getElementById('admin-login-form')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const password = document.getElementById('admin-password').value;
+    handleAdminLogin(password);
+  });
+
+  // Admin logout
+  document.getElementById('admin-logout-btn')?.addEventListener('click', handleAdminLogout);
+
+  // Admin tabs
+  document.querySelectorAll('.admin-tab-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.add('d-none'));
+      e.target.classList.add('active');
+      const tabId = 'tab-' + e.target.getAttribute('data-tab');
+      document.getElementById(tabId)?.classList.remove('d-none');
+    });
+  });
+
+  // Create tournament
+  document.getElementById('tournament-form')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    handleCreateTournament({
+      name: document.getElementById('tournament-name').value,
+      sport: document.getElementById('tournament-sport').value,
+      format: document.getElementById('tournament-format').value,
+      status: document.getElementById('tournament-status').value
+    });
+    e.target.reset();
+  });
+
+  // Add team
+  document.getElementById('teams-form')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const logoInput = document.getElementById('team-logo');
+    const teamData = {
+      tournamentId: document.getElementById('tournament-for-teams').value,
+      teamName: document.getElementById('team-name').value,
+      logo: null
+    };
+
+    if (logoInput && logoInput.files && logoInput.files[0]) {
+      if (SERVER_AVAILABLE) {
+        // Upload to server endpoint
+        const form = new FormData();
+        form.append('logo', logoInput.files[0]);
+        fetch('/api/upload-logo', { method: 'POST', body: form })
+          .then(r => r.json())
+          .then(json => {
+            teamData.logo = json.url; // server-relative URL
+            handleAddTeam(teamData);
+            e.target.reset();
+          })
+          .catch(() => {
+            // Fallback to data URL
+            const reader = new FileReader();
+            reader.onload = () => {
+              teamData.logo = reader.result;
+              handleAddTeam(teamData);
+              e.target.reset();
+            };
+            reader.readAsDataURL(logoInput.files[0]);
+          });
+      } else {
+        const reader = new FileReader();
+        reader.onload = () => {
+          teamData.logo = reader.result;
+          handleAddTeam(teamData);
+          e.target.reset();
+        };
+        reader.readAsDataURL(logoInput.files[0]);
+      }
+    } else {
+      handleAddTeam(teamData);
+      e.target.reset();
+    }
+  });
+
+  // Tournament selector
+  document.getElementById('tournament-select')?.addEventListener('change', (e) => {
+    if (e.target.value) switchTournament(e.target.value);
+  });
+
+  // Update score
+  document.getElementById('score-update-form')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    handleScoreUpdate(
+      document.getElementById('match-select').value,
+      document.getElementById('home-score').value,
+      document.getElementById('away-score').value,
+      document.getElementById('match-status').value,
+      document.getElementById('match-minute').value
+    );
+  });
+
+  // Match select (populate score fields)
+  document.getElementById('match-select')?.addEventListener('change', (e) => {
+    if (!currentDivision) return;
+    const match = currentDivision.matches.find(m => m.id === parseInt(e.target.value, 10));
+    if (match) {
+      currentMatch = match;
+      document.getElementById('match-label').textContent = `${match.home} vs ${match.away}`;
+      document.getElementById('home-score').value = match.homeScore ?? '';
+      document.getElementById('away-score').value = match.awayScore ?? '';
+      document.getElementById('match-status').value = match.status || 'scheduled';
+      document.getElementById('match-minute').value = match.minute || '';
+      renderMatchEvents(match);
+      renderMatchStats(match);
+    }
+  });
+
+  // Tournament selector for scores
+  document.getElementById('tournament-for-scores')?.addEventListener('change', (e) => {
+    const tour = tournamentsData.tournaments?.find(t => t.id === e.target.value);
+    if (tour) {
+      switchTournament(e.target.value);
+      populateMatchSelect();
+    }
+  });
+
+  // Display toggles
+  ['toggle-live-state', 'toggle-events', 'toggle-stats', 'toggle-momentum'].forEach(id => {
+    const checkbox = document.getElementById(id);
+    if (!checkbox) return;
+    checkbox.addEventListener('change', () => {
+      document.body.classList.toggle(`hide-${id.replace('toggle-', '')}`, !checkbox.checked);
+    });
+  });
+
+  // Sport guidance helpers
+  document.getElementById('tournament-sport')?.addEventListener('change', updateSportHelperText);
+
+  // Export button
+  document.getElementById('export-btn')?.addEventListener('click', exportData);
+
+  // Match event form
+  document.getElementById('match-event-form')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (!currentMatch) {
+      showError('Please select a match first.');
+      return;
+    }
+    addMatchEvent(currentMatch, {
+      type: document.getElementById('event-type').value,
+      team: document.getElementById('event-team').value,
+      minute: parseInt(document.getElementById('event-minute').value, 10),
+      player: document.getElementById('event-player').value,
+      description: document.getElementById('event-description').value
+    });
+    e.target.reset();
+  });
+
+  // Match stats form
+  document.getElementById('match-stats-form')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (!currentMatch) {
+      showError('Please select a match first.');
+      return;
+    }
+    saveMatchStats(currentMatch, {
+      possession: {
+        home: parseInt(document.getElementById('stat-possession-home').value, 10) || 0,
+        away: parseInt(document.getElementById('stat-possession-away').value, 10) || 0
+      },
+      shots: {
+        home: parseInt(document.getElementById('stat-shots-home').value, 10) || 0,
+        away: parseInt(document.getElementById('stat-shots-away').value, 10) || 0
+      },
+      corners: {
+        home: parseInt(document.getElementById('stat-corners-home').value, 10) || 0,
+        away: parseInt(document.getElementById('stat-corners-away').value, 10) || 0
+      }
+    });
+    showSuccess('Match stats saved.');
+  });
+
+  // Add match form
+  document.getElementById('add-match-form')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const home = document.getElementById('add-home-team').value;
+    const away = document.getElementById('add-away-team').value;
+    if (!home || !away) { showError('Select both teams'); return; }
+    if (home === away) { showError('Home and away teams must be different'); return; }
+
+    handleAddMatch({
+      home,
+      away,
+      date: document.getElementById('add-match-date').value || new Date().toISOString().split('T')[0],
+      status: document.getElementById('add-match-status').value,
+      homeScore: document.getElementById('add-home-score').value,
+      awayScore: document.getElementById('add-away-score').value
+    });
+
+    e.target.reset();
+  });
+
+  // Clear draft button
+  document.getElementById('clear-draft-btn')?.addEventListener('click', () => {
+    if (confirm('Are you sure you want to clear all draft changes?')) {
+      clearDraft();
+    }
+  });
+}
+
+function populateMatchSelect() {
+  const select = document.getElementById('match-select');
+  if (!select) return;
+  select.innerHTML = '<option value="">— Select a match —</option>';
+
+  if (!currentDivision || !currentDivision.matches) return;
+
+  currentDivision.matches.forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m.id;
+    const score = m.status === 'completed' ? `${m.homeScore}–${m.awayScore}` : 'TBD';
+    opt.textContent = `${m.home} vs ${m.away} (${score})`;
+    select.appendChild(opt);
+  });
+
+  if (currentMatch) {
+    select.value = currentMatch.id;
+  }
+}
+
+function initializeUI() {
+  // Initially hide admin section
+  const adminSection = document.getElementById('admin-section');
+  if (adminSection) adminSection.style.display = 'none';
+}
+
+// ============================================================
+// UI Display Functions
+// ============================================================
+
+function displayStandings(standingsArray) {
+  const tbody = document.getElementById('standings-body');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  if (!standingsArray || standingsArray.length === 0) {
+    const row = document.createElement('tr');
+    row.innerHTML = '<td colspan="10" class="no-data">No team data available.</td>';
+    tbody.appendChild(row);
+    return;
+  }
+
+  standingsArray.forEach((team, index) => {
+    const pos = index + 1;
+    const row = document.createElement('tr');
+
+    let rankClass = '';
+    let rankBadge = pos;
+    if (pos === 1) { rankClass = 'rank-gold';   rankBadge = '🥇'; }
+    else if (pos === 2) { rankClass = 'rank-silver'; rankBadge = '🥈'; }
+    else if (pos === 3) { rankClass = 'rank-bronze'; rankBadge = '🥉'; }
+
+    row.className = rankClass;
+    row.innerHTML = `
+      <td class="rank-cell">${rankBadge}</td>
+      <td class="team-name">${escapeHtml(team.name)}</td>
+      <td>${team.played}</td>
+      <td>${team.won}</td>
+      <td>${team.drawn}</td>
+      <td>${team.lost}</td>
+      <td>${team.gf}</td>
+      <td>${team.ga}</td>
+      <td>${team.gd >= 0 ? '+' : ''}${team.gd}</td>
+      <td class="points-col">${team.points}</td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+function displayMatches(matchesArray) {
+  const live = matchesArray.filter(m => m.status === 'live').sort((a, b) => new Date(a.date) - new Date(b.date));
+  const completed = matchesArray.filter(m => m.status === 'completed').sort((a, b) => new Date(b.date) - new Date(a.date));
+  const scheduled = matchesArray.filter(m => m.status === 'scheduled').sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  const liveContainer = document.getElementById('live-container');
+  if (liveContainer) {
+    liveContainer.innerHTML = '';
+    if (live.length === 0) {
+      liveContainer.innerHTML = '<p class="no-data">No live matches currently.</p>';
+    } else {
+      const grid = document.createElement('div');
+      grid.className = 'matches-grid';
+      live.forEach(m => grid.appendChild(createMatchCard(m, 'live')));
+      liveContainer.appendChild(grid);
+    }
+  }
+
+  const resultsContainer = document.getElementById('results-container');
+  if (resultsContainer) {
+    resultsContainer.innerHTML = '';
+    if (completed.length === 0) {
+      resultsContainer.innerHTML = '<p class="no-data">No finished games yet.</p>';
+    } else {
+      const grid = document.createElement('div');
+      grid.className = 'matches-grid';
+      completed.forEach(m => grid.appendChild(createMatchCard(m, 'result')));
+      resultsContainer.appendChild(grid);
+    }
+  }
+
+  const fixturesContainer = document.getElementById('fixtures-container');
+  if (fixturesContainer) {
+    fixturesContainer.innerHTML = '';
+    if (scheduled.length === 0) {
+      fixturesContainer.innerHTML = '<p class="no-data">No upcoming fixtures.</p>';
+    } else {
+      const grid = document.createElement('div');
+      grid.className = 'matches-grid';
+      scheduled.forEach(m => grid.appendChild(createMatchCard(m, 'fixture')));
+      fixturesContainer.appendChild(grid);
+    }
+  }
+
+  displayEventFeed(matchesArray);
+  populateMatchSelect();
+}
+
+function displayEventFeed(matchesArray) {
+  const feed = document.getElementById('match-events-feed');
+  if (!feed) return;
+  feed.innerHTML = '';
+
+  const events = matchesArray
+    .filter(m => Array.isArray(m.events) && m.events.length > 0)
+    .flatMap(m => m.events.map(event => ({ ...event, match: m })))
+    .sort((a, b) => b.minute - a.minute || new Date(b.match.date) - new Date(a.match.date));
+
+  if (!events || events.length === 0) {
+    feed.innerHTML = '<p class="no-data">No match events logged yet.</p>';
+    return;
+  }
+
+  const list = document.createElement('div');
+  list.className = 'event-feed-list';
+
+  events.slice(0, 10).forEach(ev => {
+    const item = document.createElement('div');
+    item.className = 'feed-event-item';
+    const teamName = ev.team === 'home' ? ev.match.home : ev.match.away;
+    const eventType = ev.type.replace(/-/g, ' ').replace(/\b\w/g, ch => ch.toUpperCase());
+    item.innerHTML = `
+      <div class="feed-event-top">
+        <span class="feed-event-minute">${ev.minute}'</span>
+        <span class="feed-event-type">${escapeHtml(eventType)}</span>
+        <span class="feed-event-match">${escapeHtml(ev.match.home)} vs ${escapeHtml(ev.match.away)}</span>
+      </div>
+      <div class="feed-event-detail">
+        <strong>${escapeHtml(teamName)}</strong>${ev.player ? ` • ${escapeHtml(ev.player)}` : ''}
+        <span>${escapeHtml(ev.description || '')}</span>
+      </div>
+    `;
+    list.appendChild(item);
+  });
+
+  feed.appendChild(list);
+}
+
+function createMatchCard(match, type) {
+  const card = document.createElement('div');
+  card.className = `match-card ${type}`;
+  const homeTeam = findTeamByName(match.home);
+  const awayTeam = findTeamByName(match.away);
+  const statusLabel = match.status === 'live' ? 'LIVE' : match.status === 'completed' ? 'FT' : 'Scheduled';
+  const statusClass = match.status === 'live' ? 'status-pill-live' : match.status === 'completed' ? 'status-pill-completed' : 'status-pill-scheduled';
+  const score = match.status === 'completed' || match.status === 'live'
+    ? `<strong class="score-display">${match.homeScore ?? 0} – ${match.awayScore ?? 0}</strong>`
+    : `<span class="fixture-tbd">TBD</span>`;
+  const dateStr = match.date ? new Date(match.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'TBD';
+  const minuteText = match.status === 'live' ? `<span class="match-clock">${match.minute || 0}'</span>` : '';
+  const homeLogo = homeTeam?.logo ? `<img src="${homeTeam.logo}" alt="${escapeHtml(homeTeam.name)} logo" class="team-logo" />` : `<span class="team-badge team-badge-home">${escapeHtml(match.home[0] || '')}</span>`;
+  const awayLogo = awayTeam?.logo ? `<img src="${awayTeam.logo}" alt="${escapeHtml(awayTeam.name)} logo" class="team-logo" />` : `<span class="team-badge team-badge-away">${escapeHtml(match.away[0] || '')}</span>`;
+  const eventSummary = match.events && match.events.length > 0
+    ? `<div class="event-summary">${escapeHtml(match.events.slice(-1)[0].description || match.events.slice(-1)[0].type)} • ${match.events.slice(-1)[0].minute}'</div>`
+    : '';
+  const momentumText = match.stats?.possession
+    ? `<div class="momentum-summary">Pressure: ${match.stats.possession.home}% home / ${match.stats.possession.away}% away</div>`
+    : '';
+
+  card.innerHTML = `
+    <div class="match-card-header">
+      <div class="status-pill ${statusClass}">${statusLabel}</div>
+      <div class="match-date">${dateStr} ${minuteText}</div>
+    </div>
+    <div class="match-teams">
+      <div class="team-entry team-home">
+        ${homeLogo}
+        <span>${escapeHtml(match.home)}</span>
+      </div>
+      <div class="match-score">${score}</div>
+      <div class="team-entry team-away">
+        <span>${escapeHtml(match.away)}</span>
+        ${awayLogo}
+      </div>
+    </div>
+    ${eventSummary}
+    ${momentumText}
+  `;
+  return card;
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function findTeamByName(name) {
+  if (!currentDivision || !currentDivision.teams) return null;
+  return currentDivision.teams.find(team => team.name === name) || null;
+}
+
+function renderMatchEvents(match) {
+  const list = document.getElementById('match-events-list');
+  if (!list) return;
+  list.innerHTML = '';
+  if (!match || !match.events || match.events.length === 0) {
+    list.innerHTML = '<p class="no-data">No events logged for this match.</p>';
+    return;
+  }
+
+  const sorted = [...match.events].sort((a, b) => a.minute - b.minute);
+  sorted.forEach(event => {
+    const item = document.createElement('div');
+    item.className = 'event-item';
+    const teamName = event.team === 'home' ? match.home : match.away;
+    item.innerHTML = `
+      <span class="event-minute">${event.minute}'</span>
+      <strong>${escapeHtml(event.type)}</strong> — ${escapeHtml(teamName)}${event.player ? ` | ${escapeHtml(event.player)}` : ''}
+      <div class="event-description">${escapeHtml(event.description || '')}</div>
+    `;
+    list.appendChild(item);
+  });
+}
+
+function renderMatchStats(match) {
+  const ph = document.getElementById('stat-possession-home'); if (ph) ph.value = match.stats?.possession?.home ?? '';
+  const pa = document.getElementById('stat-possession-away'); if (pa) pa.value = match.stats?.possession?.away ?? '';
+  const sh = document.getElementById('stat-shots-home'); if (sh) sh.value = match.stats?.shots?.home ?? '';
+  const sa = document.getElementById('stat-shots-away'); if (sa) sa.value = match.stats?.shots?.away ?? '';
+  const ch = document.getElementById('stat-corners-home'); if (ch) ch.value = match.stats?.corners?.home ?? '';
+  const ca = document.getElementById('stat-corners-away'); if (ca) ca.value = match.stats?.corners?.away ?? '';
+}
+
+function showSuccess(message) {
+  const box = document.getElementById('alert-box');
+  if (!box) return;
+  box.className = 'alert alert-success';
+  box.textContent = '✓ ' + message;
+  box.classList.remove('d-none');
+  setTimeout(() => box.classList.add('d-none'), 3500);
+}
+
+function showError(message) {
+  const box = document.getElementById('alert-box');
+  if (!box) return;
+  box.className = 'alert alert-danger';
+  box.textContent = '✕ ' + message;
+  box.classList.remove('d-none');
+  setTimeout(() => box.classList.add('d-none'), 4000);
+}
+
+function editTournament(tourId) {
+  showError('Edit tournament feature coming soon.');
+}
+
+function deleteTournament(tourId) {
+  if (!confirm('Delete this tournament? This cannot be undone.')) return;
+  tournamentsData.tournaments = tournamentsData.tournaments.filter(t => t.id !== tourId);
+  saveDraftChanges();
+  loadTournamentsData();
+  showSuccess('Tournament deleted.');
+}
